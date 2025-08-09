@@ -2,50 +2,83 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+日本語で返答して。
+
 ## Project Overview
 
-This is a browser-based action game development project called "neko-omake". The project aims to create action games that run in web browsers and can be deployed to Cloudflare.
+This is a browser-based action game development project called "neko-omake". The project aims to create action games that run in web browsers and are optimized for deployment to Cloudflare Pages edge environment.
 
 ## Technology Stack
 
 - **Language**: TypeScript must be used for all development
+- **Build Tool**: Vite (fast build and development server)
 - **Platform**: Browser-based (client-side JavaScript)
-- **Deployment**: Cloudflare-compatible format
+- **Deployment**: Cloudflare Pages (edge environment)
+- **Minifier**: Terser for production builds
 
 ## Project Structure
 
-The project uses a folder-based organization where each game is contained in its own directory:
-- `game1/` - First game project (currently empty)
-- Additional games should follow the pattern `game2/`, `game3/`, etc.
+```
+neko-omake/
+├── src/              # TypeScript source code
+│   └── main.ts       # Game entry point
+├── public/           # Static assets
+│   └── _redirects    # Cloudflare Pages routing
+├── dist/             # Build output (gitignored)
+├── index.html        # HTML template
+├── vite.config.ts    # Vite configuration
+├── tsconfig.json     # TypeScript configuration
+└── package.json      # Dependencies and scripts
+```
 
 ## Development Setup
 
-This project is in its initial stages. When setting up a new game project:
+```bash
+# Install dependencies
+npm install
 
-1. **Initialize TypeScript Project**:
-   ```bash
-   cd game1
-   npm init -y
-   npm install --save-dev typescript
-   npx tsc --init
-   ```
+# Start development server
+npm run dev
 
-2. **Common Development Commands** (once set up):
-   - Build: `npm run build`
-   - Development server: `npm run dev`
-   - Type checking: `npx tsc --noEmit`
+# Build for production (Cloudflare Pages)
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+## Cloudflare Pages Deployment
+
+### Automatic Deployment (GitHub Integration)
+- Connect repository to Cloudflare Pages
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Node.js version: 18+
+
+### Manual Deployment
+```bash
+npm run build
+npx wrangler pages deploy dist
+```
 
 ## Architecture Guidelines
 
 When developing games in this repository:
 
-1. **Game Structure**: Each game should be self-contained within its folder
-2. **Browser Compatibility**: Code must run in modern browsers without server-side dependencies
-3. **Cloudflare Deployment**: Ensure the build output is static files compatible with Cloudflare Pages or Workers
+1. **Static Build**: All code compiles to static HTML/JS/CSS files
+2. **Edge Optimization**: Minimize bundle size, use code splitting when needed
+3. **No Server Dependencies**: Everything runs client-side
+4. **Browser Compatibility**: Target modern browsers with ES2020
+5. **Performance**: Use Vite's optimization features (minification, tree-shaking)
 
 ## Important Considerations
 
 - All code must be written in TypeScript
-- Games should be playable action games suitable for browser environments
-- Each game project should maintain its own dependencies and build configuration
-- Focus on client-side performance and browser compatibility
+- Build output must be static files compatible with Cloudflare Pages edge environment
+- Use `public/_redirects` for SPA routing configuration
+- Vite config is optimized for Cloudflare Pages deployment:
+  - Terser minification enabled
+  - Source maps disabled for production
+  - Assets directory configured
+- Focus on client-side performance and minimal bundle size
+- Games should work offline after initial load (static assets)
