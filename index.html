@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Neko Omake - ブラウザアクションゲーム</title>
+  <title>Neko Omake - ゲーム集</title>
   <style>
     body {
       margin: 0;
@@ -18,18 +18,42 @@
     #app {
       text-align: center;
       color: white;
+      max-width: 720px;
+      padding: 24px;
     }
-    canvas {
-      border: 2px solid white;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    ul.games {
+      list-style: none;
+      padding: 0;
+      margin: 24px 0 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
     }
+    a.game-link {
+      display: block;
+      color: white;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 12px;
+      padding: 16px;
+      background: rgba(0,0,0,0.15);
+    }
+    a.game-link:hover { background: rgba(0,0,0,0.25); }
+    .subtitle { opacity: 0.9; font-size: 14px; margin-top: 6px; }
   </style>
 </head>
 <body>
   <div id="app">
     <h1>Neko Omake</h1>
-    <canvas id="gameCanvas"></canvas>
+    <p>遊びたいゲームを選んでください。</p>
+    <ul class="games">
+      <li>
+        <a class="game-link" href="/games/move/">
+          <strong>Move</strong>
+          <div class="subtitle">矢印/WASDで動くシンプルな移動ゲーム</div>
+        </a>
+      </li>
+    </ul>
   </div>
-  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

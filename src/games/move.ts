@@ -14,7 +14,7 @@ class Game {
   constructor() {
     this.canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     this.ctx = this.canvas.getContext('2d')!;
-    
+
     this.canvas.width = 800;
     this.canvas.height = 600;
 
@@ -24,7 +24,7 @@ class Game {
       width: 50,
       height: 50,
       speed: 5,
-      color: '#4ade80'
+      color: '#4ade80',
     };
 
     this.init();
@@ -53,7 +53,7 @@ class Game {
       if (keys['ArrowDown'] || keys['s']) {
         this.player.y = Math.min(
           this.canvas.height - this.player.height,
-          this.player.y + this.player.speed
+          this.player.y + this.player.speed,
         );
       }
       if (keys['ArrowLeft'] || keys['a']) {
@@ -62,7 +62,7 @@ class Game {
       if (keys['ArrowRight'] || keys['d']) {
         this.player.x = Math.min(
           this.canvas.width - this.player.width,
-          this.player.x + this.player.speed
+          this.player.x + this.player.speed,
         );
       }
     };
@@ -79,7 +79,7 @@ class Game {
       this.player.x,
       this.player.y,
       this.player.width,
-      this.player.height
+      this.player.height,
     );
 
     this.ctx.fillStyle = '#ffffff';

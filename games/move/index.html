@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neko Omake - Move</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    #app {
+      text-align: center;
+      color: white;
+    }
+    canvas {
+      border: 2px solid white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      display: block;
+      margin: 16px auto 0;
+    }
+    a.home-link {
+      color: #ffffff;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.6);
+      padding: 6px 10px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-top: 8px;
+      background: rgba(255,255,255,0.1);
+    }
+    a.home-link:hover { background: rgba(255,255,255,0.2); }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>Neko Omake - Move</h1>
+    <a class="home-link" href="/">ホームへ戻る</a>
+    <canvas id="gameCanvas"></canvas>
+  </div>
+  <script type="module" src="/src/games/move.ts"></script>
+</body>
+</html>
