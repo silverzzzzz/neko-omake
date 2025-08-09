@@ -12,6 +12,10 @@ export default defineConfig({
     sourcemap: false,
     minify: 'terser',
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        move: path.resolve(__dirname, 'games/move/index.html'),
+      },
       output: {
         manualChunks: undefined,
       },
