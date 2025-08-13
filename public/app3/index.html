@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyancard - パック開封</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+        
+        #app {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .pack-container {
+            position: relative;
+            width: 300px;
+            height: 400px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .pack-container:hover {
+            transform: scale(1.05);
+        }
+        
+        .pack-image {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #ff6b6b, #ffd93d);
+            border-radius: 15px;
+            border: 3px solid #fff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .pack-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            margin-bottom: 10px;
+        }
+        
+        .cat-silhouette {
+            font-size: 4rem;
+            margin: 20px 0;
+        }
+        
+        .tap-instruction {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            opacity: 0.8;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        .card {
+            position: absolute;
+            width: 200px;
+            height: 280px;
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(100vh);
+            opacity: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            color: #333;
+        }
+        
+        .card-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .card-image {
+            font-size: 3rem;
+            margin: 10px 0;
+        }
+        
+        .card-rarity {
+            font-size: 0.9rem;
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .common { background: #888; }
+        .rare { background: #4CAF50; }
+        .super-rare { background: #FF9800; }
+        .ultra-rare { background: #E91E63; }
+        .holographic { 
+            background: linear-gradient(45deg, #FFD700, #FFA500, #FF69B4, #00BFFF);
+            background-size: 400% 400%;
+            animation: hologram 2s ease-in-out infinite;
+        }
+        
+        @keyframes hologram {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .card-animate {
+            animation: cardReveal 1s ease-out forwards;
+        }
+        
+        @keyframes cardReveal {
+            0% {
+                transform: translateY(100vh) rotateY(180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(50vh) rotateY(90deg);
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(0) rotateY(0deg);
+                opacity: 1;
+            }
+        }
+        
+        .reset-button {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: none;
+        }
+        
+        .reset-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>🐱 Nyancard Pack Opening 🐱</h1>
+        <div class="pack-container" id="packContainer">
+            <div class="pack-image">
+                <div class="pack-title">ねこカードパック</div>
+                <div class="cat-silhouette">🐱</div>
+                <div class="tap-instruction">タップして開封！</div>
+            </div>
+        </div>
+        
+        <div class="card" id="card">
+            <div class="card-name" id="cardName"></div>
+            <div class="card-image" id="cardImage"></div>
+            <div class="card-rarity" id="cardRarity"></div>
+        </div>
+        
+        <div class="reset-button" id="resetButton">もう一度開封</div>
+    </div>
+
+    <script type="module" src="/src/app3/main.ts"></script>
+</body>
+</html>

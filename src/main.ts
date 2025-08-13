@@ -1,105 +1,87 @@
-class Game {
-  private canvas: HTMLCanvasElement;
-  private ctx: CanvasRenderingContext2D;
-  private animationId: number | null = null;
-  private player: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    speed: number;
-    color: string;
-  };
+import './style.css';
+
+interface AppInfo {
+  id: string;
+  title: string;
+  description: string;
+  path: string;
+}
+
+const apps: AppInfo[] = [
+  {
+    id: 'app1',
+    title: 'シンプルゲーム',
+    description: '矢印キーまたはWASDで緑の四角を動かすシンプルなゲーム',
+    path: '/app1/'
+  },
+  {
+    id: 'app2',
+    title: 'Nyango',
+    description: '毛玉を転がしてカラスを倒すアクションパズルゲーム',
+    path: '/app2/'
+  }
+];
+
+class AppLauncher {
+  private container: HTMLElement;
 
   constructor() {
-    this.canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
-    this.ctx = this.canvas.getContext('2d')!;
-    
-    this.canvas.width = 800;
-    this.canvas.height = 600;
-
-    this.player = {
-      x: this.canvas.width / 2 - 25,
-      y: this.canvas.height / 2 - 25,
-      width: 50,
-      height: 50,
-      speed: 5,
-      color: '#4ade80'
-    };
-
+    this.container = document.getElementById('app') as HTMLElement;
     this.init();
   }
 
   private init(): void {
-    this.setupEventListeners();
-    this.gameLoop();
-  }
-
-  private setupEventListeners(): void {
-    const keys: { [key: string]: boolean } = {};
-
-    window.addEventListener('keydown', (e) => {
-      keys[e.key] = true;
-    });
-
-    window.addEventListener('keyup', (e) => {
-      keys[e.key] = false;
-    });
-
-    const handleMovement = () => {
-      if (keys['ArrowUp'] || keys['w']) {
-        this.player.y = Math.max(0, this.player.y - this.player.speed);
-      }
-      if (keys['ArrowDown'] || keys['s']) {
-        this.player.y = Math.min(
-          this.canvas.height - this.player.height,
-          this.player.y + this.player.speed
-        );
-      }
-      if (keys['ArrowLeft'] || keys['a']) {
-        this.player.x = Math.max(0, this.player.x - this.player.speed);
-      }
-      if (keys['ArrowRight'] || keys['d']) {
-        this.player.x = Math.min(
-          this.canvas.width - this.player.width,
-          this.player.x + this.player.speed
-        );
-      }
-    };
-
-    setInterval(handleMovement, 16);
+    this.render();
   }
 
   private render(): void {
-    this.ctx.fillStyle = '#1e1b4b';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    this.container.innerHTML = `
+      <div class="launcher">
+        <h1 class="launcher-title">Neko-Omake アプリケーション</h1>
+        <div class="app-grid">
+          ${apps.map(app => this.createAppCard(app)).join('')}
+        </div>
+      </div>
+    `;
 
-    this.ctx.fillStyle = this.player.color;
-    this.ctx.fillRect(
-      this.player.x,
-      this.player.y,
-      this.player.width,
-      this.player.height
-    );
-
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.font = '16px Arial';
-    this.ctx.fillText('矢印キーまたはWASDで移動', 10, 30);
+    this.attachEventListeners();
   }
 
-  private gameLoop(): void {
-    this.render();
-    this.animationId = requestAnimationFrame(() => this.gameLoop());
+  private createAppCard(app: AppInfo): string {
+    const isAvailable = app.id === 'app1' || app.id === 'app2';
+    return `
+      <div class="app-card ${!isAvailable ? 'app-card--disabled' : ''}" data-app-id="${app.id}">
+        <h2 class="app-card__title">${app.title}</h2>
+        <p class="app-card__description">${app.description}</p>
+        ${isAvailable 
+          ? `<button class="app-card__button" data-path="${app.path}">起動</button>`
+          : `<button class="app-card__button" disabled>準備中</button>`
+        }
+      </div>
+    `;
   }
 
-  public destroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-    }
+  private attachEventListeners(): void {
+    const buttons = this.container.querySelectorAll('.app-card__button:not([disabled])');
+    buttons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const target = e.target as HTMLButtonElement;
+        const path = target.getAttribute('data-path');
+        if (path) {
+          window.location.href = path;
+        }
+      });
+    });
   }
 }
 
-const game = new Game();
+function initApp() {
+  new AppLauncher();
+  console.log('アプリランチャーを起動しました');
+}
 
-console.log('ゲームを開始しました！');
-console.log('矢印キーまたはWASDキーで操作できます。');
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}

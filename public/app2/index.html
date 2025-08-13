@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Nyango - Browser MVP</title>
+  <style>
+    :root{ --bg:#0e0f13; --ink:#f7f7f8; --accent:#5eead4; --danger:#ef4444; --gold:#f59e0b; }
+    html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    .wrap{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px; }
+    canvas{ background:#12151b; width:100%; max-width:540px; height:auto; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.4); touch-action:none; }
+    .hud{ width:100%; max-width:540px; display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:8px; }
+    .badge{ background:#1a1f2b; border:1px solid #263049; padding:6px 10px; border-radius:10px; font-weight:600; }
+    .controls{ width:100%; max-width:540px; display:flex; justify-content:space-between; gap:12px; opacity:.95; }
+    .stick, .buttons{ position:relative; width:44vw; max-width:240px; height:44vw; max-height:240px; }
+    .buttons{ display:flex; align-items:center; justify-content:center; }
+    .btn{ width:84px; height:84px; border-radius:50%; background:radial-gradient(circle at 30% 30%, #1f2937, #111827); border:2px solid #2b364d; color:#cbd5e1; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow: inset 0 6px 18px rgba(255,255,255,.06), 0 10px 24px rgba(0,0,0,.35); user-select:none; }
+    .btn:active{ transform:scale(.97); }
+    .hint{ font-size:12px; opacity:.7; text-align:center; }
+    /* Virtual joystick visuals */
+    .stick .base{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,.03); border:2px solid rgba(255,255,255,.08); }
+    .stick .nub{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:80px; height:80px; border-radius:50%; background:radial-gradient(circle at 30% 30%, #334155, #0f172a); border:2px solid #2b364d; }
+    .back-button{ position:absolute; top:20px; left:20px; padding:10px 20px; background:rgba(255,255,255,.2); color:var(--ink); text-decoration:none; border-radius:5px; font-weight:bold; transition:background .3s; z-index:100; }
+    .back-button:hover{ background:rgba(255,255,255,.3); }
+    @media (min-width: 800px){ .controls{ display:none; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/" class="back-button">← 戻る</a>
+    <div class="hud">
+      <div class="badge" id="score">SCORE: 0</div>
+      <div class="badge" id="lives">LIVES: ❤❤❤</div>
+      <div class="badge" id="time">TIME: 60</div>
+    </div>
+    <canvas id="game" width="480" height="640" aria-label="Nyango Game Canvas"></canvas>
+    <div class="controls">
+      <div class="stick" id="stick">
+        <div class="base"></div>
+        <div class="nub" id="nub"></div>
+      </div>
+      <div class="buttons">
+        <div class="btn" id="pushBtn" aria-label="Push">PUSH</div>
+      </div>
+    </div>
+    <div class="hint">操作: 画面左でスティック、右のPUSHで毛玉を押す。キーボード矢印・スペースでも可。</div>
+  </div>
+
+  <script type="module" src="/src/app2/main.ts"></script>
+</body>
+</html>
