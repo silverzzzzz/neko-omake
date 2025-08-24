@@ -34,6 +34,7 @@ class NyangoGame {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private animationId: number | null = null;
+  private images: { cat?: HTMLImageElement; crow?: HTMLImageElement; hairball?: HTMLImageElement } = {};
   
   private GRID_COLS = 12;
   private GRID_ROWS = 16;
@@ -66,6 +67,8 @@ class NyangoGame {
       this.canvas = document.getElementById('gameCanvas') as HTMLCanvasElement;
     }
     this.ctx = this.canvas.getContext('2d')!;
+    // ピクセルアート前提で拡大時の補間を無効化
+    this.ctx.imageSmoothingEnabled = false;
     
     this.BOARD_W = this.GRID_COLS * this.TILE;
     this.BOARD_H = this.GRID_ROWS * this.TILE;
@@ -92,6 +95,20 @@ class NyangoGame {
     };
     
     this.init();
+    this.loadAssets();
+  }
+  
+  private loadAssets(): void {
+    const load = (src: string): Promise<HTMLImageElement> => new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+    // public/ 配下に置けば /app2/icons/... で参照可能
+    load('/app2/icons/cat.png').then(img => { this.images.cat = img; }).catch(() => {});
+    load('/app2/icons/crow.png').then(img => { this.images.crow = img; }).catch(() => {});
+    load('/app2/icons/hairball.png').then(img => { this.images.hairball = img; }).catch(() => {});
   }
   
   private init(): void {
@@ -391,6 +408,14 @@ class NyangoGame {
   }
   
   private drawCat(px: number, py: number): void {
+    // 画像が存在すればそれを使用
+    if (this.images.cat) {
+      this.ctx.save();
+      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.drawImage(this.images.cat, px, py, this.TILE, this.TILE);
+      this.ctx.restore();
+      return;
+    }
     const r = this.TILE - 6;
     const x = px + 3;
     const y = py + 3;
@@ -428,6 +453,13 @@ class NyangoGame {
   }
   
   private drawHairball(px: number, py: number): void {
+    if (this.images.hairball) {
+      this.ctx.save();
+      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.drawImage(this.images.hairball, px, py, this.TILE, this.TILE);
+      this.ctx.restore();
+      return;
+    }
     const cx = px + this.TILE / 2;
     const cy = py + this.TILE / 2;
     const rad = this.TILE / 2 - 4;
@@ -448,6 +480,13 @@ class NyangoGame {
   }
   
   private drawCrow(px: number, py: number): void {
+    if (this.images.crow) {
+      this.ctx.save();
+      this.ctx.imageSmoothingEnabled = false;
+      this.ctx.drawImage(this.images.crow, px, py, this.TILE, this.TILE);
+      this.ctx.restore();
+      return;
+    }
     const r = this.TILE - 6;
     const x = px + 3;
     const y = py + 3;
