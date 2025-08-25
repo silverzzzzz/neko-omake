@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Nyango - Browser MVP</title>
+  <style>
+    /* デフォルトはライトテーマ */
+    :root{
+      --bg:#f7f7f8; --ink:#0e0f13; --accent:#00ac97; --danger:#ef4444; --gold:#f59e0b;
+      --panel:rgba(255,255,255,0.9); --panel-b:#d1d5db;
+      /* ステージ（Canvas）用の色 */
+      --canvas-bg:#f5f7fa;
+      --tile-a:#edf2f7;  /* 明るいタイル */
+      --tile-b:#e6ebf2;  /* 交互タイル */
+      --wall-fill:#cbd5e1;
+      --wall-stroke:#94a3b8;
+    }
+    [data-theme='dark']{
+      --bg:#0e0f13; --ink:#f7f7f8; --accent:#5eead4; --danger:#ef4444; --gold:#f59e0b; --panel:#1a1f2b; --panel-b:#263049;
+      --canvas-bg:#0b0e14;
+      --tile-a:#0f1320; --tile-b:#0d111c;
+      --wall-fill:#22314a; --wall-stroke:#2f4366;
+    }
+    html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; overflow-x:hidden; }
+    .wrap{ position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; padding:12px; width:100%; max-width:100vw; box-sizing:border-box; }
+    canvas{ background:var(--canvas-bg); width:100%; max-width:540px; height:auto; border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.4); touch-action:none; }
+    .hud{ width:100%; max-width:540px; display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:8px; }
+    .badge{ background:var(--panel); border:1px solid var(--panel-b); color:var(--ink); padding:6px 10px; border-radius:10px; font-weight:600; }
+    .controls{ width:100%; max-width:540px; display:flex; justify-content:space-between; gap:12px; opacity:.95; box-sizing:border-box; }
+    .dpad, .buttons{ position:relative; width:44vw; max-width:240px; height:44vw; max-height:240px; }
+    .buttons{ display:flex; align-items:center; justify-content:center; }
+    .btn{ width:84px; height:84px; border-radius:50%; background:radial-gradient(circle at 30% 30%, #1f2937, #111827); border:2px solid #2b364d; color:#cbd5e1; font-weight:700; display:flex; align-items:center; justify-content:center; box-shadow: inset 0 6px 18px rgba(255,255,255,.06), 0 10px 24px rgba(0,0,0,.35); user-select:none; }
+    .btn:active{ transform:scale(.97); }
+    .hint{ font-size:12px; opacity:.7; text-align:center; }
+    /* D-pad */
+    .dpad{ display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr 1fr; gap:0; }
+    .dpad-btn{ background:radial-gradient(circle at 30% 30%, #334155, #0f172a); border:2px solid #2b364d; color:#cbd5e1; border-radius:0; display:flex; align-items:center; justify-content:center; font-weight:800; user-select:none; touch-action:manipulation; }
+    .dpad-btn:active{ transform:scale(.97); }
+    .dpad-btn.up{ grid-column:2; grid-row:1; border-bottom:none; }
+    .dpad-btn.left{ grid-column:1; grid-row:2; border-right:none; }
+    .dpad-btn.right{ grid-column:3; grid-row:2; border-left:none; }
+    .dpad-btn.down{ grid-column:2; grid-row:3; border-top:none; }
+    .dpad-center{ grid-column:2; grid-row:2; background:radial-gradient(circle at 30% 30%, #334155, #0f172a); border:none; }
+    .back-button{ position:absolute; top:20px; left:20px; padding:10px 20px; background:rgba(255,255,255,.2); color:var(--ink); text-decoration:none; border-radius:5px; font-weight:bold; transition:background .3s; z-index:100; }
+    .back-button:hover{ background:rgba(255,255,255,.3); }
+    @media (min-width: 800px){ .controls{ display:none; } }
+
+    /* Start overlay */
+    .overlay{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:50; }
+    .overlay-card{ background:var(--panel); border:1px solid var(--panel-b); color:var(--ink); padding:20px 24px; border-radius:12px; width:90%; max-width:360px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+    .overlay-title{ font-weight:800; font-size:20px; margin-bottom:8px; }
+    .overlay-desc{ font-size:13px; opacity:.8; margin-bottom:16px; }
+    .overlay .btn-start{ display:inline-block; padding:10px 18px; border-radius:10px; background:linear-gradient(135deg,#00d1bc,#00ac97); color:#fff; border:1px solid #2b364d; font-weight:700; cursor:pointer; }
+    .hidden{ display:none; }
+  </style>
+</head>
+<body>
+  <script>
+    (function(){
+      var th = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', th);
+    })();
+  </script>
+  <div class="wrap">
+    <a href="/" class="back-button">← 戻る</a>
+    <div class="overlay" id="startOverlay">
+      <div class="overlay-card">
+        <div class="overlay-title">Nyango</div>
+        <div class="overlay-desc">毛玉を転がしてカラスを倒そう！</div>
+        <button class="btn-start" id="startBtn" aria-label="Start">スタート</button>
+      </div>
+    </div>
+    <div class="hud">
+      <div class="badge" id="score">SCORE: 0</div>
+      <div class="badge" id="lives">LIVES: ❤❤❤</div>
+      <div class="badge" id="time">TIME: 60</div>
+    </div>
+    <canvas id="game" width="480" height="640" aria-label="Nyango Game Canvas"></canvas>
+    <div class="controls">
+      <div class="dpad" id="dpad">
+        <div class="dpad-center" aria-hidden="true"></div>
+        <button class="dpad-btn up" data-key="ArrowUp" aria-label="Up">▲</button>
+        <button class="dpad-btn left" data-key="ArrowLeft" aria-label="Left">◀</button>
+        <button class="dpad-btn right" data-key="ArrowRight" aria-label="Right">▶</button>
+        <button class="dpad-btn down" data-key="ArrowDown" aria-label="Down">▼</button>
+      </div>
+      <div class="buttons">
+        <div class="btn" id="pushBtn" aria-label="Push">PUSH</div>
+      </div>
+    </div>
+    <div class="hint">操作: 左の十字キーで移動、右のPUSHで毛玉を押す／バリア。キーボード矢印・スペースでも可。</div>
+  </div>
+
+  <script type="module" src="/src/app2/main.ts"></script>
+</body>
+</html>

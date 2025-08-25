@@ -12,13 +12,13 @@ const apps: AppInfo[] = [
     id: 'app1',
     title: 'シンプルゲーム',
     description: '矢印キーまたはWASDで緑の四角を動かすシンプルなゲーム',
-    path: '/app1/'
+    path: '/app1/index.html'
   },
   {
     id: 'app2',
     title: 'Nyango',
     description: '毛玉を転がしてカラスを倒すアクションパズルゲーム',
-    path: '/app2/'
+    path: '/app2/index.html'
   }
 ];
 
@@ -37,6 +37,7 @@ class AppLauncher {
   private render(): void {
     this.container.innerHTML = `
       <div class="launcher">
+        <div class="toolbar"><button class="theme-toggle" id="themeToggle">🌞 ライト</button></div>
         <h1 class="launcher-title">Neko-Omake アプリケーション</h1>
         <div class="app-grid">
           ${apps.map(app => this.createAppCard(app)).join('')}
@@ -54,28 +55,43 @@ class AppLauncher {
         <h2 class="app-card__title">${app.title}</h2>
         <p class="app-card__description">${app.description}</p>
         ${isAvailable 
-          ? `<button class="app-card__button" data-path="${app.path}">起動</button>`
-          : `<button class="app-card__button" disabled>準備中</button>`
+          ? `<a class=\"app-card__button\" href=\"${app.path}\">起動</a>`
+          : `<button class=\"app-card__button\" disabled>準備中</button>`
         }
       </div>
     `;
   }
 
   private attachEventListeners(): void {
-    const buttons = this.container.querySelectorAll('.app-card__button:not([disabled])');
-    buttons.forEach(button => {
-      button.addEventListener('click', (e) => {
-        const target = e.target as HTMLButtonElement;
-        const path = target.getAttribute('data-path');
-        if (path) {
-          window.location.href = path;
-        }
+    // ボタン要素でのハンドリングは不要。リンクはブラウザ標準の遷移に任せる。
+    const btn = document.getElementById('themeToggle') as HTMLButtonElement | null;
+    if (btn) {
+      const current = getTheme();
+      btn.textContent = current === 'dark' ? '🌙 ダーク' : '🌞 ライト';
+      btn.addEventListener('click', () => {
+        const next = getTheme() === 'dark' ? 'light' : 'dark';
+        setTheme(next);
+        btn.textContent = next === 'dark' ? '🌙 ダーク' : '🌞 ライト';
       });
-    });
+    }
   }
 }
 
+type Theme = 'light' | 'dark';
+
+function getTheme(): Theme {
+  const saved = localStorage.getItem('theme') as Theme | null;
+  return saved === 'dark' ? 'dark' : 'light';
+}
+
+function setTheme(theme: Theme): void {
+  localStorage.setItem('theme', theme);
+  document.documentElement.setAttribute('data-theme', theme);
+}
+
 function initApp() {
+  // デフォルトはライトテーマ
+  setTheme(getTheme());
   new AppLauncher();
   console.log('アプリランチャーを起動しました');
 }

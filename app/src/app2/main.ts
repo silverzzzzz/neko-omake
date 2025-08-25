@@ -23,6 +23,7 @@ interface GameState {
   lives: number;
   time: number;
   over: boolean;
+  started: boolean;
   stage: number;
   lastDir: Position;
   grid: number[][];
@@ -35,6 +36,7 @@ class NyangoGame {
   private ctx: CanvasRenderingContext2D;
   private animationId: number | null = null;
   private images: { cat?: HTMLImageElement; crow?: HTMLImageElement; hairball?: HTMLImageElement } = {};
+  private dpr = 1;
   
   private GRID_COLS = 12;
   private GRID_ROWS = 16;
@@ -54,12 +56,23 @@ class NyangoGame {
     pushBtn: HTMLElement | null;
     stick: HTMLElement | null;
     nub: HTMLElement | null;
+    startOverlay: HTMLElement | null;
+    startBtn: HTMLElement | null;
   };
   
   private flashMsg: string | null = null;
   private flashTimer = 0;
+  private flashOverlay = true;
   private lastTime = 0;
   private secAccum = 0;
+  // エッジ揺れ演出
+  private shakeSide: 'top' | 'bottom' | 'left' | 'right' | null = null;
+  private shakeTimer = 0;
+  
+  private cssVar(name: string, fallback: string): string {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
 
   constructor() {
     this.canvas = document.getElementById('game') as HTMLCanvasElement;
@@ -79,7 +92,9 @@ class NyangoGame {
       time: document.getElementById('time'),
       pushBtn: document.getElementById('pushBtn'),
       stick: document.getElementById('stick'),
-      nub: document.getElementById('nub')
+      nub: document.getElementById('nub'),
+      startOverlay: document.getElementById('startOverlay'),
+      startBtn: document.getElementById('startBtn')
     };
     
     this.state = {
@@ -87,6 +102,7 @@ class NyangoGame {
       lives: 3,
       time: 60,
       over: false,
+      started: false,
       stage: 1,
       lastDir: { x: 0, y: 1 },
       grid: [],
@@ -137,12 +153,12 @@ class NyangoGame {
         h = Math.floor(w / aspect);
       }
       
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
       this.canvas.style.width = w + 'px';
       this.canvas.style.height = h + 'px';
-      this.canvas.width = Math.floor(w * dpr);
-      this.canvas.height = Math.floor(h * dpr);
-      this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      this.canvas.width = Math.floor(w * this.dpr);
+      this.canvas.height = Math.floor(h * this.dpr);
+      this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     } else {
       if (isMobile) {
         this.canvas.width = Math.min(window.innerWidth, 480);
@@ -157,8 +173,11 @@ class NyangoGame {
   }
   
   private boardOffset(): { offX: number; offY: number } {
-    const offX = Math.floor((this.canvas.width - this.BOARD_W) / 2);
-    const offY = Math.floor((this.canvas.height - this.BOARD_H) / 2);
+    // dprスケール後も描画座標はCSSピクセル基準なので、CSSサイズから計算する
+    const cssW = this.canvas.width / this.dpr;
+    const cssH = this.canvas.height / this.dpr;
+    const offX = Math.floor((cssW - this.BOARD_W) / 2);
+    const offY = Math.floor((cssH - this.BOARD_H) / 2);
     return { offX, offY };
   }
   
@@ -235,7 +254,7 @@ class NyangoGame {
   }
   
   private movePlayer(dx: number, dy: number): void {
-    if (this.state.over || (dx === 0 && dy === 0)) return;
+    if (!this.state.started || this.state.over || (dx === 0 && dy === 0)) return;
     
     const nx = this.state.player.x + dx;
     const ny = this.state.player.y + dy;
@@ -330,25 +349,30 @@ class NyangoGame {
     }
   }
   
-  private flash(msg: string): void {
+  private flash(msg: string, overlay: boolean = true): void {
     this.flashMsg = msg;
     this.flashTimer = 60;
+    this.flashOverlay = overlay;
   }
   
   private draw(): void {
-    this.ctx.fillStyle = '#0b0e14';
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    const cssW = this.canvas.width / this.dpr;
+    const cssH = this.canvas.height / this.dpr;
+    this.ctx.fillStyle = this.cssVar('--canvas-bg', '#0b0e14');
+    this.ctx.fillRect(0, 0, cssW, cssH);
     
     const { offX, offY } = this.boardOffset();
     this.ctx.save();
     this.ctx.translate(offX, offY);
     
+    const tileA = this.cssVar('--tile-a', '#0f1320');
+    const tileB = this.cssVar('--tile-b', '#0d111c');
     for (let y = 0; y < this.GRID_ROWS; y++) {
       for (let x = 0; x < this.GRID_COLS; x++) {
         const px = x * this.TILE;
         const py = y * this.TILE;
         
-        this.ctx.fillStyle = (x + y) % 2 === 0 ? '#0f1320' : '#0d111c';
+        this.ctx.fillStyle = (x + y) % 2 === 0 ? tileA : tileB;
         this.ctx.fillRect(px, py, this.TILE, this.TILE);
       }
     }
@@ -356,13 +380,27 @@ class NyangoGame {
     for (let y = 0; y < this.GRID_ROWS; y++) {
       for (let x = 0; x < this.GRID_COLS; x++) {
         const v = this.state.grid[y][x];
-        const px = x * this.TILE;
-        const py = y * this.TILE;
+        let px = x * this.TILE;
+        let py = y * this.TILE;
         
         if (v === 1) {
-          this.ctx.fillStyle = '#22314a';
+          // 境界の壁を揺らす演出
+          if (this.shakeSide && this.shakeTimer > 0) {
+            const phase = this.shakeTimer;
+            const amp = 2;
+            if (this.shakeSide === 'top' && y === 0) {
+              py += (phase % 2 === 0 ? amp : -amp);
+            } else if (this.shakeSide === 'bottom' && y === this.GRID_ROWS - 1) {
+              py += (phase % 2 === 0 ? -amp : amp);
+            } else if (this.shakeSide === 'left' && x === 0) {
+              px += (phase % 2 === 0 ? amp : -amp);
+            } else if (this.shakeSide === 'right' && x === this.GRID_COLS - 1) {
+              px += (phase % 2 === 0 ? -amp : amp);
+            }
+          }
+          this.ctx.fillStyle = this.cssVar('--wall-fill', '#22314a');
           this.ctx.fillRect(px + 2, py + 2, this.TILE - 4, this.TILE - 4);
-          this.ctx.strokeStyle = '#2f4366';
+          this.ctx.strokeStyle = this.cssVar('--wall-stroke', '#2f4366');
           this.ctx.strokeRect(px + 2, py + 2, this.TILE - 4, this.TILE - 4);
         } else if (v === 2) {
           this.drawHairball(px, py);
@@ -380,27 +418,36 @@ class NyangoGame {
     
     if (this.flashTimer > 0) {
       this.flashTimer--;
+      if (this.flashOverlay) {
+        this.ctx.save();
+        this.ctx.globalAlpha = Math.min(1, this.flashTimer / 10);
+        this.ctx.fillStyle = 'rgba(0,0,0,.4)';
+        this.ctx.fillRect(0, 0, cssW, cssH);
+        this.ctx.restore();
+      }
       this.ctx.save();
-      this.ctx.globalAlpha = Math.min(1, this.flashTimer / 10);
-      this.ctx.fillStyle = 'rgba(0,0,0,.4)';
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
       this.ctx.fillStyle = '#ffffff';
       this.ctx.font = 'bold 24px system-ui';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText(this.flashMsg || '', this.canvas.width / 2, this.canvas.height / 2);
+      this.ctx.fillText(this.flashMsg || '', cssW / 2, cssH / 2);
       this.ctx.restore();
     }
     
-    if (this.state.over) {
+    if (!this.state.started) {
+      this.ctx.save();
+      this.ctx.fillStyle = 'rgba(0,0,0,.35)';
+      this.ctx.fillRect(0, 0, cssW, cssH);
+      this.ctx.restore();
+    } else if (this.state.over) {
       this.ctx.save();
       this.ctx.fillStyle = 'rgba(0,0,0,.55)';
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      this.ctx.fillRect(0, 0, cssW, cssH);
       this.ctx.fillStyle = '#ffffff';
       this.ctx.font = 'bold 26px system-ui';
       this.ctx.textAlign = 'center';
-      this.ctx.fillText('ゲームオーバー', this.canvas.width / 2, this.canvas.height / 2 - 20);
+      this.ctx.fillText('ゲームオーバー', cssW / 2, cssH / 2 - 20);
       this.ctx.font = '16px system-ui';
-      this.ctx.fillText('クリックでリスタート', this.canvas.width / 2, this.canvas.height / 2 + 12);
+      this.ctx.fillText('クリックでリスタート', cssW / 2, cssH / 2 + 12);
       this.ctx.restore();
     }
     
@@ -581,6 +628,40 @@ class NyangoGame {
         this.pushAction();
       });
     }
+    // D-pad（十字キー）: data-key属性を持つボタンを監視
+    const dpadBtns = document.querySelectorAll('[data-key]') as NodeListOf<HTMLElement>;
+    dpadBtns.forEach((el) => {
+      const key = el.getAttribute('data-key');
+      if (!key) return;
+      el.addEventListener('touchstart', (e) => {
+        this.keys.add(key);
+        e.preventDefault();
+      }, { passive: false });
+      el.addEventListener('touchend', (e) => {
+        this.keys.delete(key);
+        e.preventDefault();
+      }, { passive: false });
+      el.addEventListener('touchcancel', (e) => {
+        this.keys.delete(key);
+        e.preventDefault();
+      }, { passive: false });
+      el.addEventListener('mousedown', () => {
+        this.keys.add(key);
+      });
+      window.addEventListener('mouseup', () => {
+        this.keys.delete(key);
+      });
+      el.addEventListener('click', () => {
+        if (!this.state.started) return;
+        if (key === 'ArrowLeft') this.movePlayer(-1, 0);
+        else if (key === 'ArrowRight') this.movePlayer(1, 0);
+        else if (key === 'ArrowUp') this.movePlayer(0, -1);
+        else if (key === 'ArrowDown') this.movePlayer(0, 1);
+      });
+    });
+    if (this.ui.startBtn) {
+      this.ui.startBtn.addEventListener('click', () => this.startGame());
+    }
   }
   
   private handleKeyboardMove(): void {
@@ -591,12 +672,14 @@ class NyangoGame {
     else if (this.keys.has('ArrowUp') || this.keys.has('w')) dy = -1;
     else if (this.keys.has('ArrowDown') || this.keys.has('s')) dy = 1;
     
+    if (!this.state.started) return;
     if (dx || dy) {
       this.movePlayer(dx, dy);
     }
   }
   
   private pushAction(): void {
+    if (!this.state.started) return;
     const dx = this.state.lastDir.x;
     const dy = this.state.lastDir.y;
     const nx = this.state.player.x + dx;
@@ -604,6 +687,12 @@ class NyangoGame {
     
     if (this.isHairball(nx, ny)) {
       this.pushHairball(nx, ny, dx, dy);
+      return;
+    }
+    // 境界に対して押した場合はエッジ揺れ
+    if (this.isBorderCell(nx, ny)) {
+      const side = this.borderSide(nx, ny);
+      if (side) this.edgeShake(side);
     }
   }
   
@@ -667,16 +756,28 @@ class NyangoGame {
     this.state.score = 0;
     this.state.lives = 3;
     this.state.stage = 1;
+    this.state.time = 60;
+    this.state.over = false;
     this.buildStage();
+    this.secAccum = 0;
+    this.lastTime = performance.now();
+  }
+  
+  private startGame(): void {
+    this.restart();
+    this.state.started = true;
+    if (this.ui.startOverlay) {
+      this.ui.startOverlay.classList.add('hidden');
+    }
   }
   
   private gameLoop(): void {
     const now = performance.now();
     const dt = Math.min(33, now - this.lastTime);
     this.lastTime = now;
-    this.secAccum += dt;
     
-    if (!this.state.over) {
+    if (this.state.started && !this.state.over) {
+      this.secAccum += dt;
       this.updateCrows();
       
       if (this.secAccum >= 1000) {
@@ -703,6 +804,15 @@ class NyangoGame {
       }
     }
     
+    // エッジ揺れの時間経過
+    if (this.shakeTimer > 0) {
+      this.shakeTimer -= 1;
+      if (this.shakeTimer <= 0) {
+        this.shakeTimer = 0;
+        this.shakeSide = null;
+      }
+    }
+
     this.draw();
     this.animationId = requestAnimationFrame(() => this.gameLoop());
   }
@@ -710,6 +820,43 @@ class NyangoGame {
   public destroy(): void {
     if (this.animationId) {
       cancelAnimationFrame(this.animationId);
+    }
+  }
+
+  // ===== エッジ関連ユーティリティ =====
+  private isBorderCell(x: number, y: number): boolean {
+    if (y < 0 || y >= this.GRID_ROWS || x < 0 || x >= this.GRID_COLS) return false;
+    return this.state.grid[y][x] === 1 && (x === 0 || y === 0 || x === this.GRID_COLS - 1 || y === this.GRID_ROWS - 1);
+  }
+
+  private borderSide(x: number, y: number): 'top' | 'bottom' | 'left' | 'right' | null {
+    if (y === 0) return 'top';
+    if (y === this.GRID_ROWS - 1) return 'bottom';
+    if (x === 0) return 'left';
+    if (x === this.GRID_COLS - 1) return 'right';
+    return null;
+  }
+
+  private edgeShake(side: 'top' | 'bottom' | 'left' | 'right'): void {
+    if (this.shakeTimer > 0) return; // 連打防止
+    this.shakeSide = side;
+    this.shakeTimer = 18;
+    const before = this.state.crows.length;
+    if (side === 'top') {
+      this.state.crows = this.state.crows.filter(c => c.y !== 1);
+    } else if (side === 'bottom') {
+      this.state.crows = this.state.crows.filter(c => c.y !== this.GRID_ROWS - 2);
+    } else if (side === 'left') {
+      this.state.crows = this.state.crows.filter(c => c.x !== 1);
+    } else if (side === 'right') {
+      this.state.crows = this.state.crows.filter(c => c.x !== this.GRID_COLS - 2);
+    }
+    const killed = before - this.state.crows.length;
+    if (killed > 0) {
+      this.state.score += 100 * killed;
+      this.flash(`バリアヒット！x${killed}`, false);
+    } else {
+      this.flash('バリアシェイク！', false);
     }
   }
 }
