@@ -51,12 +51,30 @@ class PackOpening {
         this.cardImage = document.getElementById('cardImage')!;
         this.cardRarity = document.getElementById('cardRarity')!;
 
+        console.log('PackOpening initialized');
         this.setupEventListeners();
     }
 
     private setupEventListeners(): void {
-        this.packContainer.addEventListener('click', () => this.openPack());
-        this.resetButton.addEventListener('click', () => this.reset());
+        console.log('Setting up event listeners');
+        this.packContainer.addEventListener('click', () => {
+            console.log('Pack clicked!');
+            this.openPack();
+        });
+        this.packContainer.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            console.log('Pack touched!');
+            this.openPack();
+        });
+        this.resetButton.addEventListener('click', () => {
+            console.log('Reset clicked!');
+            this.reset();
+        });
+        this.resetButton.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            console.log('Reset touched!');
+            this.reset();
+        });
     }
 
     private getRandomCard(): Card {
@@ -86,6 +104,7 @@ class PackOpening {
     }
 
     private async openPack(): Promise<void> {
+        console.log('Opening pack...');
         // Disable pack clicking
         this.packContainer.style.pointerEvents = 'none';
         
@@ -103,6 +122,7 @@ class PackOpening {
         
         // Get random card and show it
         const card = this.getRandomCard();
+        console.log('Got card:', card);
         this.displayCard(card);
         
         // Hide pack completely and show reset button

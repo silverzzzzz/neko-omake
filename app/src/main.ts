@@ -19,6 +19,12 @@ const apps: AppInfo[] = [
     title: 'Nyango',
     description: '毛玉を転がしてカラスを倒すアクションパズルゲーム',
     path: '/app2/index.html'
+  },
+  {
+    id: 'app3',
+    title: 'Nyancard',
+    description: 'カードパック開封ゲーム - 様々なレアリティの猫カードを集めよう',
+    path: '/app3/index.html'
   }
 ];
 
@@ -49,7 +55,7 @@ class AppLauncher {
   }
 
   private createAppCard(app: AppInfo): string {
-    const isAvailable = app.id === 'app1' || app.id === 'app2';
+    const isAvailable = app.id === 'app1' || app.id === 'app2' || app.id === 'app3';
     return `
       <div class="app-card ${!isAvailable ? 'app-card--disabled' : ''}" data-app-id="${app.id}">
         <h2 class="app-card__title">${app.title}</h2>
