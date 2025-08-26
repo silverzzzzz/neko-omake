@@ -12,8 +12,17 @@ export default defineConfig({
     sourcemap: false,
     minify: 'terser',
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        app1: path.resolve(__dirname, 'src/app1/main.ts'),
+        app2: path.resolve(__dirname, 'src/app2/main.ts'),
+        app3: path.resolve(__dirname, 'src/app3/main.ts'),
+      },
       output: {
         manualChunks: undefined,
+        entryFileNames: 'assets/[name].js',
+        chunkFileNames: 'assets/[name].js',
+        assetFileNames: 'assets/[name][extname]'
       },
     },
   },

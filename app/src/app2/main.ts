@@ -46,16 +46,12 @@ class NyangoGame {
   
   private state: GameState;
   private keys: Set<string> = new Set();
-  private stickActive = false;
-  private stickStart = { x: 0, y: 0 };
   
   private ui: {
     score: HTMLElement | null;
     lives: HTMLElement | null;
     time: HTMLElement | null;
     pushBtn: HTMLElement | null;
-    stick: HTMLElement | null;
-    nub: HTMLElement | null;
     startOverlay: HTMLElement | null;
     startBtn: HTMLElement | null;
   };
@@ -91,8 +87,6 @@ class NyangoGame {
       lives: document.getElementById('lives'),
       time: document.getElementById('time'),
       pushBtn: document.getElementById('pushBtn'),
-      stick: document.getElementById('stick'),
-      nub: document.getElementById('nub'),
       startOverlay: document.getElementById('startOverlay'),
       startBtn: document.getElementById('startBtn')
     };
@@ -587,37 +581,6 @@ class NyangoGame {
       }
     }, { passive: true });
     
-    if (this.ui.stick) {
-      this.ui.stick.addEventListener('touchstart', (e) => {
-        const t = e.changedTouches[0];
-        this.onStickStart(t.clientX, t.clientY);
-        e.preventDefault();
-      }, { passive: false });
-      
-      this.ui.stick.addEventListener('touchmove', (e) => {
-        const t = e.changedTouches[0];
-        this.onStickMove(t.clientX, t.clientY);
-        e.preventDefault();
-      }, { passive: false });
-      
-      this.ui.stick.addEventListener('touchend', (e) => {
-        this.onStickEnd();
-        e.preventDefault();
-      }, { passive: false });
-      
-      this.ui.stick.addEventListener('mousedown', (e) => {
-        this.onStickStart(e.clientX, e.clientY);
-      });
-      
-      this.ui.stick.addEventListener('mousemove', (e) => {
-        if (this.stickActive) {
-          this.onStickMove(e.clientX, e.clientY);
-        }
-      });
-      
-      window.addEventListener('mouseup', () => this.onStickEnd());
-    }
-    
     if (this.ui.pushBtn) {
       this.ui.pushBtn.addEventListener('touchstart', (e) => {
         this.pushAction();
@@ -696,61 +659,7 @@ class NyangoGame {
     }
   }
   
-  private stickCenter(): { x: number; y: number } {
-    if (!this.ui.stick) return { x: 0, y: 0 };
-    const rect = this.ui.stick.getBoundingClientRect();
-    return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2
-    };
-  }
-  
-  private setNub(dx: number, dy: number): void {
-    if (!this.ui.nub) return;
-    const len = Math.hypot(dx, dy);
-    const max = 60;
-    if (len > max) {
-      dx = dx / len * max;
-      dy = dy / len * max;
-    }
-    this.ui.nub.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-  }
-  
-  private resetNub(): void {
-    if (!this.ui.nub) return;
-    this.ui.nub.style.transform = 'translate(-50%, -50%)';
-  }
-  
-  private dirFromVector(dx: number, dy: number): Position {
-    if (Math.abs(dx) > Math.abs(dy)) {
-      return { x: Math.sign(dx), y: 0 };
-    } else {
-      return { x: 0, y: Math.sign(dy) };
-    }
-  }
-  
-  private onStickStart(x: number, y: number): void {
-    this.stickActive = true;
-    this.stickStart = { x, y };
-    this.setNub(0, 0);
-  }
-  
-  private onStickMove(x: number, y: number): void {
-    if (!this.stickActive) return;
-    const cx = this.stickCenter();
-    const dx = x - cx.x;
-    const dy = y - cx.y;
-    this.setNub(dx, dy);
-    const dir = this.dirFromVector(dx, dy);
-    if (dir.x || dir.y) {
-      this.movePlayer(dir.x, dir.y);
-    }
-  }
-  
-  private onStickEnd(): void {
-    this.stickActive = false;
-    this.resetNub();
-  }
+  // バーチャルスティックはD-padへ置き換え済み
   
   private restart(): void {
     this.state.score = 0;
@@ -861,7 +770,8 @@ class NyangoGame {
   }
 }
 
-const game = new NyangoGame();
+new NyangoGame();
 
 console.log('Nyango ゲームを開始しました！');
 console.log('毛玉を押してカラスを倒そう！');
+export {};

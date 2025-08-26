@@ -99,7 +99,8 @@ class Game {
   }
 }
 
-const game = new Game();
+new Game();
 
 console.log('ゲームを開始しました！');
 console.log('矢印キーまたはWASDキーで操作できます。');
+export {};

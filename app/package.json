@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cf:dev": "npm run build && wrangler dev",
+    "cf:deploy": "npm run build && wrangler deploy"
   },
   "repository": {
     "type": "git",
@@ -22,6 +24,7 @@
   "homepage": "https://github.com/silverzzzzz/neko-omake#readme",
   "devDependencies": {
     "@types/node": "^24.2.1",
+    "wrangler": "^3.75.0",
     "terser": "^5.43.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.1"
