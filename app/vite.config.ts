@@ -17,6 +17,7 @@ export default defineConfig({
         app1: path.resolve(__dirname, 'src/app1/main.ts'),
         app2: path.resolve(__dirname, 'src/app2/main.ts'),
         app3: path.resolve(__dirname, 'src/app3/main.ts'),
+        'app3-collection': path.resolve(__dirname, 'src/app3/collection.ts'),
       },
       output: {
         manualChunks: undefined,

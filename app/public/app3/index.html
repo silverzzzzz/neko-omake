@@ -4,369 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nyancard - パック開封</title>
+    <link rel="stylesheet" href="/assets/app3.css">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #fafafa;
-            font-family: 'Arial', sans-serif;
-            color: #1f2937;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            overflow: hidden;
-        }
-        
-        #app {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        h1 {
-            margin-bottom: 20px;
-            font-size: 2.2rem;
-            color: #111827;
-            letter-spacing: 0.2px;
-        }
-        .link-collection {
-            display: inline-block;
-            margin-bottom: 16px;
-            font-size: 0.95rem;
-            color: #2563eb;
-            text-decoration: none;
-            border: 1px solid #bfdbfe;
-            background: #eff6ff;
-            padding: 6px 10px;
-            border-radius: 9999px;
-            transition: background .2s ease, transform .1s ease;
-        }
+        body { margin: 0; padding: 0; background: #fafafa; font-family: 'Arial', sans-serif; color: #1f2937; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow: hidden; }
+        #app { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        h1 { margin-bottom: 20px; font-size: 2.2rem; color: #111827; letter-spacing: 0.2px; }
+        .link-collection { display: inline-block; margin-bottom: 16px; font-size: 0.95rem; color: #2563eb; text-decoration: none; border: 1px solid #bfdbfe; background: #eff6ff; padding: 6px 10px; border-radius: 9999px; transition: background .2s ease, transform .1s ease; }
         .link-collection:hover { background: #dbeafe; transform: translateY(-1px); }
-        
-        .pack-container {
-            position: relative;
-            width: 300px;
-            height: 400px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        
-        .pack-container:hover {
-            transform: scale(1.05);
-        }
-        
-        .pack-image {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, #ffffff 0%, #f7f7f9 100%);
-            border-radius: 14px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 12px 28px rgba(0,0,0,0.08);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-        
-        .pack-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 10px;
-        }
-        
-        .cat-silhouette {
-            font-size: 4rem;
-            margin: 20px 0;
-        }
-        
-        .tap-instruction {
-            margin-top: 20px;
-            font-size: 1rem;
-            color: #6b7280;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
-        }
-        
-        .card {
-            position: absolute;
-            width: min(92vw, 400px);
-            aspect-ratio: 200 / 279; /* トレカ比率 */
-            background: #ffffff;
-            border-radius: 14px;
-            border: none;
-            box-shadow: 0 12px 26px rgba(17, 24, 39, 0.12);
-            opacity: 0;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            padding: 14px;
-            color: #111827;
-            isolation: isolate; /* 擬似要素レイヤーのため */
-            cursor: pointer;
-            /* ホバー用のカスタムプロパティ */
-            --mx: .5; /* マウスX(0-1) */
-            --my: .5; /* マウスY(0-1) */
-            --glow: rgba(255,255,255,0.12); /* デフォルトのハイライト色 */
-            transform-origin: center;
-            transform-style: preserve-3d;
-            will-change: transform;
-            transition: transform 120ms ease-out;
-            touch-action: none; /* モバイルでのpointermove有効化 */
-            /* エフェクト角度と強度（JSで更新） */
-            --ang-deg: 45deg;
-            --int: .4;
-        }
-        /* グラデーション枠（中抜きマスク） */
-        .card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            padding: 2px; /* 枠の太さ */
-            border-radius: inherit;
-            background: linear-gradient(135deg, #d1d5db, #9ca3af);
-            -webkit-mask:
-              linear-gradient(#000 0 0) content-box,
-              linear-gradient(#000 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-            z-index: 4;
-        }
-
-        /* ホバーの光沢/ホットスポット（ポインタ位置に追従） */
-        .card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            z-index: 3;
-            opacity: 0;
-            transition: opacity .2s ease;
-            background:
-              radial-gradient(300px circle at calc(var(--mx) * 100%) calc(var(--my) * 100%), var(--glow), transparent 60%),
-              conic-gradient(from 0deg at calc(var(--mx) * 100%) calc(var(--my) * 100%), rgba(255,255,255,0), rgba(255,255,255,0.08) 15%, rgba(255,255,255,0) 30% 100%);
-            mix-blend-mode: overlay;
-        }
-        .card.is-hovered::after { opacity: 1; }
-        
-        .card-name {
-            position: relative;
-            z-index: 5;
-            font-size: 1.05rem;
-            font-weight: 800;
-            text-align: center;
-            width: 100%;
-            padding: 6px 10px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.85);
-            color: #111827;
-            letter-spacing: 0.2px;
-            -webkit-backdrop-filter: blur(2px);
-            backdrop-filter: blur(2px);
-        }
-        
-        .card-image {
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            overflow: hidden;
-            z-index: 0;
-        }
-        .card-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            transform: translateZ(0);
-        }
-        
-        .card-rarity {
-            position: relative;
-            z-index: 5;
-            font-size: 0.85rem;
-            padding: 6px 12px;
-            border-radius: 9999px;
-            color: #fff;
-            font-weight: 700;
-            letter-spacing: .2px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .common { background: #888; }
-        .rare { background: #16a34a; }
-        .super-rare { background: #f59e0b; }
-        .ultra-rare { background: #db2777; }
-        .holographic { 
-            background: linear-gradient(45deg, #f59e0b, #f43f5e, #6366f1, #22d3ee, #10b981);
-            background-size: 400% 400%;
-            animation: hologram 3s ease-in-out infinite;
-        }
-        
-        @keyframes hologram {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        /* 追加の質感・反射レイヤー（poke-holo風） */
-        .card-effects {
-            position: absolute;
-            inset: 0;
-            border-radius: inherit;
-            pointer-events: none;
-            z-index: 2;
-            opacity: 0;
-            mix-blend-mode: overlay;
-            background:
-              /* ソフトなハイライト帯（角度可変） */
-              linear-gradient(var(--ang-deg), rgba(255,255,255, calc(var(--int)*0.10)), rgba(255,255,255,0) 60%),
-              /* 細いストライプ */
-              repeating-linear-gradient(calc(var(--ang-deg) + 90deg), rgba(255,255,255,0.08) 0 2px, rgba(255,255,255,0.0) 2px 6px),
-              /* レア度の色味帯 */
-              linear-gradient(135deg, var(--fx-color-a, rgba(180,200,255,0.10)), var(--fx-color-b, rgba(200,255,220,0.10)), var(--fx-color-c, rgba(255,200,240,0.10)));
-            background-size: 200% 200%, 140% 140%, 100% 100%;
-            background-position: 50% 50%, 50% 50%, 50% 50%;
-            filter: saturate(var(--fx-sat, 120%)) brightness(var(--fx-bright, 100%));
-            transition: opacity .2s ease, background-position .2s ease;
-        }
-        .card.is-hovered .card-effects { opacity: .45; }
-        
-        .card-animate { animation: cardReveal 900ms cubic-bezier(.2,.7,.2,1) forwards; }
-        
-        @keyframes cardReveal {
-            0% { transform: translateY(100vh) scale(.96) rotateX(8deg); opacity: 0; }
-            60% { transform: translateY(4vh) scale(1.02) rotateX(0); opacity: .9; }
-            100% { transform: translateY(0) scale(1) rotateX(0); opacity: 1; }
-        }
-
-        /* レア度ごとの枠グラデーション */
-        .card[data-rarity="common"]::before { background: linear-gradient(135deg, #e5e7eb, #cbd5e1); }
-        .card[data-rarity="common"] {
-            --glow: rgba(148, 163, 184, 0.25);
-            --fx-color-a: rgba(203,213,225,0.18);
-            --fx-color-b: rgba(226,232,240,0.12);
-            --fx-color-c: rgba(209,213,219,0.12);
-            --fx-sat: 110%;
-        }
-        .card[data-rarity="rare"]::before { background: linear-gradient(135deg, #34d399, #10b981); }
-        .card[data-rarity="rare"] {
-            --glow: rgba(16, 185, 129, 0.28);
-            --fx-color-a: rgba(16,185,129,0.22);
-            --fx-color-b: rgba(45,212,191,0.18);
-            --fx-color-c: rgba(74,222,128,0.16);
-        }
-        .card[data-rarity="super-rare"]::before { background: linear-gradient(135deg, #f59e0b, #f97316); }
-        .card[data-rarity="super-rare"] {
-            --glow: rgba(245, 158, 11, 0.28);
-            --fx-color-a: rgba(245,158,11,0.22);
-            --fx-color-b: rgba(251,146,60,0.18);
-            --fx-color-c: rgba(253,186,116,0.16);
-        }
-        .card[data-rarity="ultra-rare"]::before { background: linear-gradient(135deg, #818cf8, #f472b6, #22d3ee); }
-        .card[data-rarity="ultra-rare"] {
-            /* Trainer Gallery Holofoil 風の色味 */
-            --glow: rgba(147, 197, 253, 0.28);
-            --fx-color-a: rgba(99,102,241,0.22);   /* indigo */
-            --fx-color-b: rgba(236,72,153,0.18);   /* pink */
-            --fx-color-c: rgba(59,130,246,0.16);   /* blue */
-            --fx-sat: 135%;
-            --fx-bright: 108%;
-        }
-        .card[data-rarity="holographic"]::before { 
-            background: linear-gradient(135deg, #f59e0b, #f43f5e, #6366f1, #22d3ee, #10b981);
-            background-size: 300% 300%;
-            animation: holoBorder 6s linear infinite;
-        }
-        .card[data-rarity="holographic"] {
-            --glow: rgba(255, 255, 255, 0.32);
-            --fx-color-a: rgba(245,158,11,0.22);
-            --fx-color-b: rgba(99,102,241,0.22);
-            --fx-color-c: rgba(16,185,129,0.22);
-            --fx-sat: 140%;
-            --fx-bright: 110%;
-        }
-        @keyframes holoBorder {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* ホログラムの薄い光沢（カード全面）*/
-        .card[data-rarity="holographic"]::after {
-            background:
-              radial-gradient(380px circle at calc(var(--mx) * 100%) calc(var(--my) * 100%), rgba(255,255,255,0.20), rgba(255,255,255,0.0) 60%),
-              conic-gradient(from 0deg, rgba(255,255,255,0.10), rgba(255,255,255,0.02), rgba(255,255,255,0.10));
-            animation: holoSheen 4s linear infinite;
-        }
-        /* Ultra-Rare: Trainer Gallery Holofoil 風のパターン（星屑+斜めバンド） */
-        .card[data-rarity="ultra-rare"] .card-effects {
-            background:
-              /* 星屑の点描（2レイヤー） */
-              radial-gradient(rgba(255,255,255,.35) 1px, transparent 1.6px) 0 0/6px 6px,
-              radial-gradient(rgba(255,255,255,.22) 1px, transparent 1.6px) 3px 3px/8px 8px,
-              /* 斜めの反射帯 */
-              linear-gradient(var(--ang-deg), rgba(255,255,255, calc(var(--int)*0.18)), rgba(255,255,255,0) 60%),
-              /* カラーフレア */
-              linear-gradient(135deg, rgba(99,102,241,0.20), rgba(236,72,153,0.16), rgba(59,130,246,0.16));
-            mix-blend-mode: overlay;
-            background-size: 240px 240px, 280px 280px, 200% 200%, 100% 100%;
-            animation: tgShift 12s linear infinite;
-            filter: saturate(var(--fx-sat, 135%)) brightness(var(--fx-bright, 108%));
-        }
-        @keyframes tgShift {
-            0% { background-position: 0% 0%, 0% 0%, 50% 50%, 50% 50%; }
-            50% { background-position: 100% 50%, 50% 100%, 60% 40%, 50% 50%; }
-            100% { background-position: 0% 0%, 0% 0%, 50% 50%, 50% 50%; }
-        }
-        /* 質感レイヤーのアニメーション */
-        .card[data-rarity="holographic"] .card-effects {
-            animation: holoShift 8s linear infinite;
-        }
-        @keyframes holoShift {
-            0% { background-position: 0% 0%, 0% 0%, 50% 50%; }
-            50% { background-position: 100% 50%, 50% 100%, 50% 50%; }
-            100% { background-position: 0% 0%, 0% 0%, 50% 50%; }
-        }
-        @keyframes holoSheen {
-            0% { transform: translateX(-5%); opacity: .6; }
-            50% { transform: translateX(5%); opacity: .9; }
-            100% { transform: translateX(-5%); opacity: .6; }
-        }
-        
-        .reset-button {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            padding: 10px 18px;
-            background: #111827;
-            border: none;
-            border-radius: 9999px;
-            color: #fff;
-            cursor: pointer;
-            font-size: 0.95rem;
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-            display: none;
-        }
-        
-        .reset-button:hover {
-            background: #0b1220;
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.16);
-        }
+        .pack-container { position: relative; width: 300px; height: 400px; cursor: pointer; transition: transform 0.3s ease; }
+        .pack-container:hover { transform: scale(1.05); }
+        .pack-image { width: 100%; height: 100%; background: linear-gradient(180deg, #ffffff 0%, #f7f7f9 100%); border-radius: 14px; border: 1px solid #e5e7eb; box-shadow: 0 12px 28px rgba(0,0,0,0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+        .pack-title { font-size: 1.4rem; font-weight: 700; color: #111827; margin-bottom: 10px; }
+        .cat-silhouette { font-size: 4rem; margin: 20px 0; }
+        .tap-instruction { margin-top: 20px; font-size: 1rem; color: #6b7280; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+        /* Pokemon V 風タイトル */
+        .title-v { position: relative; display: inline-flex; align-items: center; gap: 10px; font-weight: 900; letter-spacing: .5px; transform: skewX(-8deg); }
+        .title-v-text { position: relative; display: inline-block; padding: 6px 10px; background: linear-gradient(180deg, #fff7b1 0%, #ffd34d 40%, #ff9f1c 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 1px 1px 0 #0b1220, -1px 1px 0 #0b1220, 1px -1px 0 #0b1220, -1px -1px 0 #0b1220, 0 6px 12px rgba(0,0,0,.25); }
+        .title-v-text::after { content: ''; position: absolute; top: -15%; left: -20%; width: 28%; height: 130%; background: linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.65) 45%, rgba(255,255,255,0) 60%); transform: translateX(-120%) skewX(-10deg); animation: titleSheen 3.5s linear infinite 1.2s; pointer-events: none; mix-blend-mode: screen; }
+        .title-v-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; background: linear-gradient(180deg, #c7ccd5 0%, #9aa4b2 60%, #6b7280 100%); color: #0b1220; border: 2px solid #0b1220; box-shadow: 0 4px 0 #0b1220, 0 10px 14px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.9); line-height: 1; transform: skewX(-6deg) translateY(2px); text-shadow: 0 1px 0 rgba(255,255,255,.6); font-weight: 900; }
+        @keyframes titleSheen { 0% { transform: translateX(-120%) skewX(-10deg); } 100% { transform: translateX(220%) skewX(-10deg); } }
+        /* カード見た目は card.css（ビルド後は /assets/app3.css にバンドル）に集約。ここでは表示制御のみ */
+        .card { position: absolute; opacity: 0; display: none; }
+        .reset-button { position: absolute; bottom: 30px; right: 30px; padding: 10px 18px; background: #111827; border: none; border-radius: 9999px; color: #fff; cursor: pointer; font-size: 0.95rem; transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease; box-shadow: 0 6px 16px rgba(0,0,0,0.12); display: none; }
+        .reset-button:hover { background: #0b1220; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,0.16); }
     </style>
 </head>
 <body>
     <div id="app">
-        <h1>🐱 Nyancard Pack Opening 🐱</h1>
+        <h1 class="title-v"><span class="title-v-text">Nyancard</span><span class="title-v-badge">V</span></h1>
         <a class="link-collection" href="/app3/collection/index.html">コレクションを見る</a>
         <div class="pack-container" id="packContainer">
             <div class="pack-image">
@@ -377,8 +43,9 @@
         </div>
         
         <div class="card" id="card">
-            <div class="card-name" id="cardName"></div>
+            <div class="card-name" id="cardName"><span class="name-text"></span><span class="name-badge">Trainer Gallery</span></div>
             <div class="card-image" id="cardImage"></div>
+            <div class="card-vignette" aria-hidden="true"></div>
             <div class="card-effects" aria-hidden="true"></div>
             <div class="card-rarity" id="cardRarity"></div>
         </div>
