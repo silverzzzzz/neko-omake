@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nyancard Collection - サンプル</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #fafafa;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji';
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 16px;
+      font-size: 1.8rem;
+      letter-spacing: .2px;
+    }
+    p.desc { margin: 0 0 20px; color: #6b7280; }
+    .collection-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ===== Card base (copied from app3 and adapted for static view) ===== */
+    .card {
+      width: min(92vw, 400px);
+      aspect-ratio: 200 / 279;
+      background: #fff;
+      border-radius: 14px;
+      border: none;
+      box-shadow: 0 12px 26px rgba(17, 24, 39, 0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px;
+      color: #111827;
+      isolation: isolate;
+      cursor: pointer;
+      --mx: .5;
+      --my: .5;
+      --glow: rgba(255,255,255,0.12);
+      transform-origin: center;
+      transform-style: preserve-3d;
+      will-change: transform;
+      transition: transform 120ms ease-out;
+      touch-action: none;
+      --ang-deg: 45deg;
+      --int: .4;
+      margin-inline: auto;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      padding: 2px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, #d1d5db, #9ca3af);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      z-index: 4;
+    }
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: 3;
+      opacity: 0;
+      transition: opacity .2s ease;
+      background:
+        radial-gradient(300px circle at calc(var(--mx) * 100%) calc(var(--my) * 100%), var(--glow), transparent 60%),
+        conic-gradient(from 0deg at calc(var(--mx) * 100%) calc(var(--my) * 100%), rgba(255,255,255,0), rgba(255,255,255,0.08) 15%, rgba(255,255,255,0) 30% 100%);
+      mix-blend-mode: overlay;
+    }
+    .card.is-hovered::after { opacity: 1; }
+
+    .card-name {
+      position: relative;
+      z-index: 5;
+      font-size: 1.05rem;
+      font-weight: 800;
+      text-align: center;
+      width: 100%;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.85);
+      color: #111827;
+      letter-spacing: 0.2px;
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+    }
+    .card-image {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      overflow: hidden;
+      z-index: 0;
+    }
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transform: translateZ(0);
+    }
+    .card-effects {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0;
+      mix-blend-mode: overlay;
+      background:
+        linear-gradient(var(--ang-deg), rgba(255,255,255, calc(var(--int)*0.10)), rgba(255,255,255,0) 60%),
+        repeating-linear-gradient(calc(var(--ang-deg) + 90deg), rgba(255,255,255,0.08) 0 2px, rgba(255,255,255,0.0) 2px 6px),
+        linear-gradient(135deg, var(--fx-color-a, rgba(180,200,255,0.10)), var(--fx-color-b, rgba(200,255,220,0.10)), var(--fx-color-c, rgba(255,200,240,0.10)));
+      background-size: 200% 200%, 140% 140%, 100% 100%;
+      background-position: 50% 50%, 50% 50%, 50% 50%;
+      filter: saturate(var(--fx-sat, 120%)) brightness(var(--fx-bright, 100%));
+      transition: opacity .2s ease, background-position .2s ease;
+    }
+    .card.is-hovered .card-effects { opacity: .45; }
+
+    .card-rarity {
+      position: relative;
+      z-index: 5;
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 9999px;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: .2px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .common { background: #888; }
+    .rare { background: #16a34a; }
+    .super-rare { background: #f59e0b; }
+    .ultra-rare { background: #db2777; }
+    .holographic {
+      background: linear-gradient(45deg, #f59e0b, #f43f5e, #6366f1, #22d3ee, #10b981);
+      background-size: 400% 400%;
+      animation: hologram 3s ease-in-out infinite;
+    }
+    @keyframes hologram {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    /* rarity styles */
+    .card[data-rarity="common"]::before { background: linear-gradient(135deg, #e5e7eb, #cbd5e1); }
+    .card[data-rarity="common"] {
+      --glow: rgba(148, 163, 184, 0.25);
+      --fx-color-a: rgba(203,213,225,0.18);
+      --fx-color-b: rgba(226,232,240,0.12);
+      --fx-color-c: rgba(209,213,219,0.12);
+      --fx-sat: 110%;
+    }
+    .card[data-rarity="rare"]::before { background: linear-gradient(135deg, #34d399, #10b981); }
+    .card[data-rarity="rare"] {
+      --glow: rgba(16, 185, 129, 0.28);
+      --fx-color-a: rgba(16,185,129,0.22);
+      --fx-color-b: rgba(45,212,191,0.18);
+      --fx-color-c: rgba(74,222,128,0.16);
+    }
+    .card[data-rarity="super-rare"]::before { background: linear-gradient(135deg, #f59e0b, #f97316); }
+    .card[data-rarity="super-rare"] {
+      --glow: rgba(245, 158, 11, 0.28);
+      --fx-color-a: rgba(245,158,11,0.22);
+      --fx-color-b: rgba(251,146,60,0.18);
+      --fx-color-c: rgba(253,186,116,0.16);
+    }
+    .card[data-rarity="ultra-rare"]::before { background: linear-gradient(135deg, #f472b6, #db2777); }
+    .card[data-rarity="ultra-rare"] {
+      --glow: rgba(219, 39, 119, 0.26);
+      --fx-color-a: rgba(244,114,182,0.22);
+      --fx-color-b: rgba(236,72,153,0.18);
+      --fx-color-c: rgba(244,63,94,0.16);
+    }
+    .card[data-rarity="holographic"]::before {
+      background: linear-gradient(135deg, #f59e0b, #f43f5e, #6366f1, #22d3ee, #10b981);
+      background-size: 300% 300%;
+      animation: holoBorder 6s linear infinite;
+    }
+    .card[data-rarity="holographic"] {
+      --glow: rgba(255, 255, 255, 0.32);
+      --fx-color-a: rgba(245,158,11,0.22);
+      --fx-color-b: rgba(99,102,241,0.22);
+      --fx-color-c: rgba(16,185,129,0.22);
+      --fx-sat: 140%;
+      --fx-bright: 110%;
+    }
+    @keyframes holoBorder {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .card[data-rarity="holographic"] .card-effects {
+      animation: holoShift 8s linear infinite;
+    }
+    @keyframes holoShift {
+      0% { background-position: 0% 0%, 0% 0%, 50% 50%; }
+      50% { background-position: 100% 50%, 50% 100%, 50% 50%; }
+      100% { background-position: 0% 0%, 0% 0%, 50% 50%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1>Nyancard コレクション（サンプル）</h1>
+    <p class="desc">各レアリティのカード見本。ホバーまたは指でなぞってチルトします。</p>
+    <div class="collection-grid" id="grid">
+      <div class="card" data-rarity="common">
+        <div class="card-name">コモン</div>
+        <div class="card-image"><img src="/app3/cards/common/nomal1.jpg" alt="コモン"></div>
+        <div class="card-effects" aria-hidden="true"></div>
+        <div class="card-rarity common">コモン</div>
+      </div>
+      <div class="card" data-rarity="rare">
+        <div class="card-name">レア</div>
+        <div class="card-image"><img src="/app3/cards/rare/rare1.jpg" alt="レア"></div>
+        <div class="card-effects" aria-hidden="true"></div>
+        <div class="card-rarity rare">レア</div>
+      </div>
+      <div class="card" data-rarity="super-rare">
+        <div class="card-name">スーパーレア</div>
+        <div class="card-image"><img src="/app3/cards/super-rare/surper.jpg" alt="スーパーレア"></div>
+        <div class="card-effects" aria-hidden="true"></div>
+        <div class="card-rarity super-rare">スーパーレア</div>
+      </div>
+      <div class="card" data-rarity="ultra-rare">
+        <div class="card-name">ウルトラレア</div>
+        <div class="card-image"><img src="/app3/cards/ultra-rare/ultra.jpg" alt="ウルトラレア"></div>
+        <div class="card-effects" aria-hidden="true"></div>
+        <div class="card-rarity ultra-rare">ウルトラレア</div>
+      </div>
+      <div class="card" data-rarity="holographic">
+        <div class="card-name">ホログラム</div>
+        <div class="card-image"><img src="/app3/cards/holographic/holo.jpg" alt="ホログラム"></div>
+        <div class="card-effects" aria-hidden="true"></div>
+        <div class="card-rarity holographic">ホログラム</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // シンプルなチルト＆光沢追従（複数カード対応）
+    (function attachTilt() {
+      const cards = document.querySelectorAll('.card');
+      cards.forEach(el => {
+        const update = (clientX, clientY) => {
+          const rect = el.getBoundingClientRect();
+          const x = clientX - rect.left;
+          const y = clientY - rect.top;
+          const px = Math.max(0, Math.min(1, x / rect.width));
+          const py = Math.max(0, Math.min(1, y / rect.height));
+          const ry = (px - 0.5) * 18;
+          const rx = (0.5 - py) * 18;
+          el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+          el.classList.add('is-hovered');
+          el.style.setProperty('--mx', px);
+          el.style.setProperty('--my', py);
+          const dx = px - 0.5;
+          const dy = py - 0.5;
+          const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+          const dist = Math.min(1, Math.hypot(dx, dy) * 2);
+          el.style.setProperty('--ang-deg', `${ang}deg`);
+          el.style.setProperty('--int', dist.toFixed(2));
+        };
+        const onLeave = () => {
+          el.classList.remove('is-hovered');
+          el.style.transform = 'translateY(0)';
+          el.style.removeProperty('--mx');
+          el.style.removeProperty('--my');
+        };
+        el.addEventListener('pointermove', (e) => update(e.clientX, e.clientY), { passive: true });
+        el.addEventListener('pointerenter', (e) => update(e.clientX, e.clientY), { passive: true });
+        el.addEventListener('pointerover', (e) => update(e.clientX, e.clientY), { passive: true });
+        el.addEventListener('pointerleave', onLeave);
+        el.addEventListener('pointerdown', (e) => { try { el.setPointerCapture?.(e.pointerId); } catch {} });
+        el.addEventListener('pointerup',   (e) => { try { el.releasePointerCapture?.(e.pointerId); } catch {} });
+      });
+    })();
+  </script>
+</body>
+</html>
+

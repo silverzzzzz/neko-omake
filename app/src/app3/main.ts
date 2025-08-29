@@ -42,6 +42,7 @@ class PackOpening {
     private cardName: HTMLElement;
     private cardImage: HTMLElement;
     private cardRarity: HTMLElement;
+    private hoverBound = false;
 
     constructor() {
         this.packContainer = document.getElementById('packContainer')!;
@@ -132,13 +133,48 @@ class PackOpening {
 
     private displayCard(card: Card): void {
         this.cardName.textContent = card.name;
-        this.cardImage.textContent = card.image;
+        const imgSrc = this.pickRarityImage(card.rarity);
+        if (imgSrc) {
+            this.cardImage.innerHTML = `<img src="${imgSrc}" alt="${card.name}" />`;
+        } else {
+            // フォールバック（旧: 絵文字）
+            this.cardImage.textContent = card.image;
+        }
         this.cardRarity.textContent = card.rarityDisplay;
         this.cardRarity.className = `card-rarity ${card.rarity}`;
-        
+        // 見た目切替用データ属性（CSS で参照）
+        this.cardElement.setAttribute('data-rarity', card.rarity);
+
         // Show card with animation
         this.cardElement.style.display = 'flex';
         this.cardElement.classList.add('card-animate');
+
+        // ホバー効果（マウス）を一度だけバインド
+        this.ensureHoverHandlers();
+
+        // アニメーション終了後にクラスを外して transform をJSで上書き可能にする
+        const onAnimEnd = (e: AnimationEvent) => {
+            if (e.animationName === 'cardReveal') {
+                // アニメの最終状態を維持（translateY(0)）したまま、JSの回転を上書き可能に
+                this.cardElement.style.transform = 'translateY(0)';
+                this.cardElement.style.opacity = '1';
+                this.cardElement.classList.remove('card-animate');
+                this.cardElement.removeEventListener('animationend', onAnimEnd);
+            }
+        };
+        this.cardElement.addEventListener('animationend', onAnimEnd);
+
+        // フォールバック: 稀に animationend が発火しない環境向け
+        window.setTimeout(() => {
+            try {
+                const opacity = getComputedStyle(this.cardElement).opacity;
+                if (opacity === '0') {
+                    this.cardElement.style.opacity = '1';
+                    this.cardElement.style.transform = 'translateY(0)';
+                    this.cardElement.classList.remove('card-animate');
+                }
+            } catch {}
+        }, 1200);
         
         // Add special effects for rare cards
         if (card.rarity === 'holographic') {
@@ -146,6 +182,88 @@ class PackOpening {
         } else if (card.rarity === 'ultra-rare') {
             this.addGoldenGlow();
         }
+    }
+
+    private ensureHoverHandlers(): void {
+        if (this.hoverBound) return;
+        this.hoverBound = true;
+
+        const el = this.cardElement;
+        const update = (clientX: number, clientY: number) => {
+            const rect = el.getBoundingClientRect();
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+            const px = Math.max(0, Math.min(1, x / rect.width));
+            const py = Math.max(0, Math.min(1, y / rect.height));
+            const ry = (px - 0.5) * 18; // 横方向の傾き
+            const rx = (0.5 - py) * 18; // 縦方向の傾き
+            el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+            el.classList.add('is-hovered');
+            el.style.setProperty('--mx', px.toString());
+            el.style.setProperty('--my', py.toString());
+            // 角度/強度（CSSエフェクト用）
+            const dx = px - 0.5;
+            const dy = py - 0.5;
+            const ang = Math.atan2(dy, dx) * 180 / Math.PI; // -180..180
+            const dist = Math.min(1, Math.hypot(dx, dy) * 2); // 0..1
+            el.style.setProperty('--ang-deg', `${ang}deg`);
+            el.style.setProperty('--int', dist.toFixed(2));
+        };
+
+        const onPointerMove = (e: PointerEvent) => {
+            update(e.clientX, e.clientY);
+        };
+        const onPointerEnter = (e: PointerEvent) => {
+            update(e.clientX, e.clientY);
+        };
+        const onPointerOver = (e: PointerEvent) => {
+            update(e.clientX, e.clientY);
+        };
+        const onPointerLeave = () => {
+            el.classList.remove('is-hovered');
+            // 画面内に留める
+            el.style.transform = 'translateY(0)';
+            el.style.removeProperty('--mx');
+            el.style.removeProperty('--my');
+        };
+        const onPointerDown = (e: PointerEvent) => {
+            try { el.setPointerCapture?.(e.pointerId); } catch {}
+        };
+        const onPointerUp = (e: PointerEvent) => {
+            try { el.releasePointerCapture?.(e.pointerId); } catch {}
+        };
+
+        el.addEventListener('pointermove', onPointerMove, { passive: true } as any);
+        el.addEventListener('pointerenter', onPointerEnter, { passive: true } as any);
+        el.addEventListener('pointerover', onPointerOver, { passive: true } as any);
+        el.addEventListener('pointerleave', onPointerLeave);
+        el.addEventListener('pointerdown', onPointerDown);
+        el.addEventListener('pointerup', onPointerUp);
+    }
+
+    private pickRarityImage(rarity: Card['rarity']): string {
+        const rarityImagePaths: Record<Card['rarity'], string[]> = {
+            'common': [
+                '/app3/cards/common/nomal1.jpg',
+                '/app3/cards/common/normal2.jpg',
+            ],
+            'rare': [
+                '/app3/cards/rare/rare1.jpg',
+                '/app3/cards/rare/rare2.jpeg',
+            ],
+            'super-rare': [
+                '/app3/cards/super-rare/surper.jpg',
+            ],
+            'ultra-rare': [
+                '/app3/cards/ultra-rare/ultra.jpg',
+            ],
+            'holographic': [
+                '/app3/cards/holographic/holo.jpg',
+            ],
+        };
+        const list = rarityImagePaths[rarity] || [];
+        if (list.length === 0) return '';
+        return list[Math.floor(Math.random() * list.length)];
     }
 
     private addSparkleEffect(): void {
@@ -204,7 +322,9 @@ class PackOpening {
     }
 }
 
-// Initialize the pack opening game
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize the pack opening game (dynamic import 対応)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => new PackOpening());
+} else {
     new PackOpening();
-});
+}

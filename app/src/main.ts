@@ -61,15 +61,27 @@ class AppLauncher {
         <h2 class="app-card__title">${app.title}</h2>
         <p class="app-card__description">${app.description}</p>
         ${isAvailable 
-          ? `<a class=\"app-card__button\" href=\"${app.path}\">起動</a>`
-          : `<button class=\"app-card__button\" disabled>準備中</button>`
+          ? `<button class="app-card__button" data-app-path="${app.path}">起動</button>`
+          : `<button class="app-card__button" disabled>準備中</button>`
         }
       </div>
     `;
   }
 
   private attachEventListeners(): void {
-    // ボタン要素でのハンドリングは不要。リンクはブラウザ標準の遷移に任せる。
+    // アプリ起動ボタンのイベントリスナーを追加
+    const appButtons = document.querySelectorAll('.app-card__button[data-app-path]');
+    appButtons.forEach(button => {
+      button.addEventListener('click', (e) => {
+        const target = e.target as HTMLButtonElement;
+        const path = target.dataset.appPath;
+        if (path) {
+          window.location.href = path;
+        }
+      });
+    });
+
+    // テーマ切り替えボタン
     const btn = document.getElementById('themeToggle') as HTMLButtonElement | null;
     if (btn) {
       const current = getTheme();
