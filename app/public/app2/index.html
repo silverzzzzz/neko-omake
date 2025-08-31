@@ -48,11 +48,17 @@
 
     /* Start overlay */
     .overlay{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:50; }
-    .overlay-card{ background:var(--panel); border:1px solid var(--panel-b); color:var(--ink); padding:20px 24px; border-radius:12px; width:90%; max-width:360px; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.2); }
-    .overlay-title{ font-weight:800; font-size:20px; margin-bottom:8px; }
-    .overlay-desc{ font-size:13px; opacity:.8; margin-bottom:16px; }
+    .overlay-card{ background:var(--panel); border:1px solid var(--panel-b); color:var(--ink); padding:20px 24px; border-radius:12px; width:90%; max-width:360px; text-align:left; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+    .overlay-title{ font-weight:800; font-size:20px; margin-bottom:8px; text-align:center; }
+    .overlay-desc{ font-size:13px; opacity:.8; margin-bottom:12px; }
+    .overlay-rules{ font-size:13px; line-height:1.5; margin:0 0 14px 0; padding-left:18px; }
+    .overlay-rules li{ margin:4px 0; }
     .overlay .btn-start{ display:inline-block; padding:10px 18px; border-radius:10px; background:linear-gradient(135deg,#00d1bc,#00ac97); color:#fff; border:1px solid #2b364d; font-weight:700; cursor:pointer; }
     .hidden{ display:none; }
+    /* Claw icon */
+    .claw-icon{ position:absolute; right:18px; bottom:18px; width:52px; height:52px; image-rendering: pixelated; filter: drop-shadow(0 4px 8px rgba(0,0,0,.4));}
+    .claw-blink{ animation: clawblink 0.9s linear infinite; }
+    @keyframes clawblink { 0%,100%{ opacity:1 } 50%{ opacity:.25 } }
   </style>
 </head>
 <body>
@@ -67,7 +73,19 @@
     <div class="overlay" id="startOverlay">
       <div class="overlay-card">
         <div class="overlay-title">Nyango</div>
-        <div class="overlay-desc">毛玉を転がしてカラスを倒そう！</div>
+        <div class="overlay-desc">はじめにルールを確認しよう。</div>
+        <ol class="overlay-rules">
+          <li><b>移動:</b> 左の十字キー（または矢印/WASD）で猫を動かす。</li>
+          <li><b>PUSH:</b> 目の前の対象に応じて行動。
+            <br>・毛玉→一直線に転がして敵に当てる（多段ヒットで加点）
+            <br>・砂山→崩れる（一定確率で「爪とぎ」ドロップ）
+            <br>・外周の木→半径2マスの敵を約1秒スタン
+            <br>・敵が目の前＋爪とぎ所持→直接攻撃（犬も一撃）
+          </li>
+          <li><b>チュール:</b> 毛玉を横/縦に3つ連続でそろえると、フィールドに「チュール」が出現（取得でボーナス）。</li>
+          <li><b>クリア条件:</b> 敵を全滅させる。残り時間が0・ライフ0でゲームオーバー。</li>
+          <li><b>スコア/時間:</b> カラス+100 / 犬+200、毛玉同時ヒットで倍率、チュール取得+500。残り時間が0・ライフ0でゲームオーバー。</li>
+        </ol>
         <button class="btn-start" id="startBtn" aria-label="Start">スタート</button>
       </div>
     </div>
@@ -77,6 +95,7 @@
       <div class="badge" id="time">TIME: 60</div>
     </div>
     <canvas id="game" width="480" height="640" aria-label="Nyango Game Canvas"></canvas>
+    <img id="clawIcon" class="claw-icon hidden" src="/app2/icons/tumetogi.png" alt="Claw item" />
     <div class="controls">
       <div class="dpad" id="dpad">
         <div class="dpad-center" aria-hidden="true"></div>
@@ -89,7 +108,6 @@
         <div class="btn" id="pushBtn" aria-label="Push">PUSH</div>
       </div>
     </div>
-    <div class="hint">操作: 左の十字キーで移動、右のPUSHで毛玉を押す／バリア。キーボード矢印・スペースでも可。</div>
   </div>
 
   <script type="module" src="/src/app2/main.ts"></script>

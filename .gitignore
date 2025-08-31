@@ -35,3 +35,4 @@ lerna-debug.log*
 
 # Cloudflare
 .wrangler/
+*Zone.Identifier

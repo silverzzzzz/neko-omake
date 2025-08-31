@@ -17,7 +17,7 @@ const apps: AppInfo[] = [
   {
     id: 'app2',
     title: 'Nyango',
-    description: '毛玉を転がしてカラスを倒すアクションパズルゲーム',
+    description: '毛玉×木スタン×爪とぎ！犬も登場、毛玉3連でチュール出現',
     path: '/app2/index.html'
   },
   {
