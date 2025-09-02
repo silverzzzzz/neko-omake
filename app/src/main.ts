@@ -8,12 +8,12 @@ interface AppInfo {
 }
 
 const apps: AppInfo[] = [
-  {
+  /*{
     id: 'app1',
     title: 'シンプルゲーム',
     description: '矢印キーまたはWASDで緑の四角を動かすシンプルなゲーム',
     path: '/app1/index.html'
-  },
+  },*/
   {
     id: 'app2',
     title: 'Nyango',

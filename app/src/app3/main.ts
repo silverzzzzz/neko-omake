@@ -11,18 +11,18 @@ interface Card {
 
 const cardDatabase: Card[] = [
     // Common Cards (60% chance)
-    { id: 1, name: "ミケ", image: "🐱", rarity: "common", rarityDisplay: "コモン" },
-    { id: 2, name: "クロ", image: "🐈‍⬛", rarity: "common", rarityDisplay: "コモン" },
-    { id: 3, name: "シロ", image: "🤍", rarity: "common", rarityDisplay: "コモン" },
-    { id: 4, name: "トラ", image: "🐅", rarity: "common", rarityDisplay: "コモン" },
-    { id: 5, name: "チャトラ", image: "🧡", rarity: "common", rarityDisplay: "コモン" },
-    { id: 6, name: "ハチワレ", image: "🖤", rarity: "common", rarityDisplay: "コモン" },
+    { id: 1, name: "にゃんこ", image: "🐱", rarity: "common", rarityDisplay: "コモン" },
+    { id: 2, name: "にゃんこ", image: "🐈‍⬛", rarity: "common", rarityDisplay: "コモン" },
+    { id: 3, name: "にゃんこ", image: "🤍", rarity: "common", rarityDisplay: "コモン" },
+    { id: 4, name: "にゃんこ", image: "🐅", rarity: "common", rarityDisplay: "コモン" },
+    { id: 5, name: "にゃんこ", image: "🧡", rarity: "common", rarityDisplay: "コモン" },
+    { id: 6, name: "にゃんこ", image: "🖤", rarity: "common", rarityDisplay: "コモン" },
     
     // Rare Cards (25% chance)
-    { id: 7, name: "ペルシャ", image: "😸", rarity: "rare", rarityDisplay: "レア" },
-    { id: 8, name: "メインクーン", image: "😺", rarity: "rare", rarityDisplay: "レア" },
-    { id: 9, name: "スコティッシュ", image: "😻", rarity: "rare", rarityDisplay: "レア" },
-    { id: 10, name: "マンチカン", image: "😽", rarity: "rare", rarityDisplay: "レア" },
+    { id: 7, name: "にゃんこ", image: "😸", rarity: "rare", rarityDisplay: "レア" },
+    { id: 8, name: "にゃんこ", image: "😺", rarity: "rare", rarityDisplay: "レア" },
+    { id: 9, name: "にゃんこ", image: "😻", rarity: "rare", rarityDisplay: "レア" },
+    { id: 10, name: "にゃんこ", image: "😽", rarity: "rare", rarityDisplay: "レア" },
     
     // Super Rare Cards (10% chance)
     { id: 11, name: "ライオン", image: "🦁", rarity: "super-rare", rarityDisplay: "スーパーレア" },
